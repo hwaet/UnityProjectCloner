@@ -30,6 +30,8 @@ namespace UnityProjectCloner
         /// </remarks>
         public const string CloneNameSuffix = "_clone";
 
+        public const int MaxCloneProjectCount = 10;
+
         #region Managing clones
         /// <summary>
         /// Creates clone from the project currently open in Unity Editor.
@@ -55,7 +57,28 @@ namespace UnityProjectCloner
         public static Project CreateCloneFromPath(string sourceProjectPath)
         {
             Project sourceProject = new Project(sourceProjectPath);
-            Project cloneProject = new Project(sourceProjectPath + ProjectCloner.CloneNameSuffix);
+
+            string cloneProjectPath = null;
+
+            //Find available clone suffix id
+            for (int i = 0; i < MaxCloneProjectCount; i++)
+            {
+                string originalProjectPath = ProjectCloner.GetCurrentProject().projectPath;
+                string possibleCloneProjectPath = originalProjectPath + ProjectCloner.CloneNameSuffix + "_" + i;
+
+                if (!Directory.Exists(possibleCloneProjectPath))
+                {
+                    cloneProjectPath = possibleCloneProjectPath;
+                    break;
+                }
+            }
+            if (string.IsNullOrEmpty(cloneProjectPath))
+            {
+                Debug.LogError("The number of cloned projects has reach its limit. Limit: " + MaxCloneProjectCount);
+                return null;
+            }
+
+            Project cloneProject = new Project(cloneProjectPath);
 
             Debug.Log("Start project name: " + sourceProject);
             Debug.Log("Clone project name: " + cloneProject);
@@ -114,37 +137,34 @@ namespace UnityProjectCloner
         /// <summary>
         /// Deletes the clone of the currently open project, if such exists.
         /// </summary>
-        public static void DeleteClone()
+        public static void DeleteClone(string cloneProjectPath)
         {
             /// Clone won't be able to delete itself.
             if (ProjectCloner.IsClone()) return;
 
-            string cloneProjectPath = ProjectCloner.GetCloneProjectPath();
-
             ///Extra precautions.
             if (cloneProjectPath == string.Empty) return;
             if (cloneProjectPath == ProjectCloner.GetOriginalProjectPath()) return;
-            if (cloneProjectPath.EndsWith(ProjectCloner.CloneNameSuffix)) return;
 
-            /// Delete the clone project folder.
-            throw new System.NotImplementedException();
-            // TODO: implement proper project deletion;
-            //       appears that using FileUtil.DeleteFileOrDirectory(...) on symlinks affects the contents of linked folders
-            //       (because this script self-deleted itself and half of the Assets folder when I tested it :D)
-            //       there must be another, safe method to delete the clone folder and symlinks without touching the original
+            //Check what OS is
+            switch (Application.platform)
             {
-                /*
-                EditorUtility.DisplayProgressBar("Deleting clone...", "Deleting '" + ProjectCloner.GetCloneProjectPath() + "'", 0f);
-                try
-                {
-                     FileUtil.DeleteFileOrDirectory(cloneProjectPath);
-                }
-                catch (IOException)
-                {
-                     EditorUtility.DisplayDialog("Could not delete clone", "'" + ProjectCloner.GetCurrentProject().name + "_clone' may be currently open in another unity Editor. Please close it and try again.", "OK");
-                }
-                EditorUtility.ClearProgressBar();
-                */
+                case (RuntimePlatform.WindowsEditor):
+                    Debug.Log("Attempting to delete folder \"" + cloneProjectPath + "\"");
+                    string args = "/c " + @"rmdir /s/q " + string.Format("\"{0}\"", cloneProjectPath);
+                    StartHiddenConsoleProcess("cmd.exe", args);
+                   
+                    break;
+                case (RuntimePlatform.OSXEditor):
+                    throw new System.NotImplementedException("No Mac function implement yet :(");
+                    //break;
+                case (RuntimePlatform.LinuxEditor):
+                    throw new System.NotImplementedException("No linux support yet :(");
+                    //break;
+                default:
+                    Debug.LogWarning("Not in a known editor. Where are you!?");
+                    break;
+
             }
         }
         #endregion
@@ -234,7 +254,7 @@ namespace UnityProjectCloner
                         break;
                     case (RuntimePlatform.LinuxEditor):
                         throw new System.NotImplementedException("No linux support yet :(");
-                        break;
+                        //break;
                     default:
                         Debug.LogWarning("Not in a known editor. Where are you!?");
                         break;
@@ -292,9 +312,14 @@ namespace UnityProjectCloner
                 /// If this is a clone...
                 /// Original project path can be deduced by removing the suffix from the clone's path.
                 string cloneProjectPath = ProjectCloner.GetCurrentProject().projectPath;
-                string originalProjectPath = cloneProjectPath.Remove(cloneProjectPath.Length - ProjectCloner.CloneNameSuffix.Length);
 
-                if (Directory.Exists(originalProjectPath)) return originalProjectPath;
+                int index = cloneProjectPath.LastIndexOf(ProjectCloner.CloneNameSuffix);
+                if (index > 0)
+                {
+                    string originalProjectPath = cloneProjectPath.Substring(0, index);
+                    if (Directory.Exists(originalProjectPath)) return originalProjectPath;
+                }
+
                 return string.Empty;
             }
             else
@@ -305,28 +330,21 @@ namespace UnityProjectCloner
         }
 
         /// <summary>
-        /// Returns the path to the clone project.
-        /// If currently open project is the clone, returns its own path.
-        /// If the clone does not exist yet, retuns an empty string.
+        /// Returns all clone projects path.
         /// </summary>
         /// <returns></returns>
-        public static string GetCloneProjectPath()
+        public static List<string> GetCloneProjectsPath()
         {
-            if (IsClone())
+            List<string> projectsPath = new List<string>();
+            for (int i = 0; i < MaxCloneProjectCount; i++)
             {
-                /// If this is the clone, we return its own path.
-                return ProjectCloner.GetCurrentProjectPath();
-            }
-            else
-            {
-                /// If this is the original...
-                /// Clone project path can be deduced by add the suffix to the original's path.
                 string originalProjectPath = ProjectCloner.GetCurrentProject().projectPath;
-                string cloneProjectPath = originalProjectPath + ProjectCloner.CloneNameSuffix;
+                string cloneProjectPath = originalProjectPath + ProjectCloner.CloneNameSuffix + "_" + i;
 
-                if (Directory.Exists(cloneProjectPath)) return cloneProjectPath;
-                return string.Empty;
+                if (Directory.Exists(cloneProjectPath))
+                    projectsPath.Add(cloneProjectPath);
             }
+            return projectsPath;
         }
 
         /// <summary>
