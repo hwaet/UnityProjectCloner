@@ -145,6 +145,7 @@ namespace UnityProjectCloner
             ///Extra precautions.
             if (cloneProjectPath == string.Empty) return;
             if (cloneProjectPath == ProjectCloner.GetOriginalProjectPath()) return;
+            if (!cloneProjectPath.EndsWith(ProjectCloner.CloneNameSuffix)) return;
 
             //Check what OS is
             switch (Application.platform)
@@ -164,7 +165,6 @@ namespace UnityProjectCloner
                 default:
                     Debug.LogWarning("Not in a known editor. Where are you!?");
                     break;
-
             }
         }
         #endregion
@@ -227,6 +227,18 @@ namespace UnityProjectCloner
             ProjectCloner.StartHiddenConsoleProcess("cmd.exe", cmd);
         }
 
+        /// <summary>
+        /// Creates a symlink between destinationPath and sourcePath (Linux version).
+        /// </summary>
+        /// <param name="sourcePath"></param>
+        /// <param name="destinationPath"></param>
+        private static void CreateLinkLunux(string sourcePath, string destinationPath)
+        {
+            string cmd = string.Format("-c \"ln -s {0} {1}\"", sourcePath, destinationPath);
+            Debug.Log("Linux junction: " + cmd);
+            ProjectCloner.StartHiddenConsoleProcess("/bin/bash", cmd);
+        }
+
         //TODO avoid terminal calls and use proper api stuff. See below for windows! 
         ////https://docs.microsoft.com/en-us/windows/desktop/api/ioapiset/nf-ioapiset-deviceiocontrol
         //[DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -253,8 +265,8 @@ namespace UnityProjectCloner
                         CreateLinkMac(sourcePath, destinationPath);
                         break;
                     case (RuntimePlatform.LinuxEditor):
-                        throw new System.NotImplementedException("No linux support yet :(");
-                        //break;
+                        CreateLinkLunux(sourcePath, destinationPath);
+                        break;
                     default:
                         Debug.LogWarning("Not in a known editor. Where are you!?");
                         break;
