@@ -28,3 +28,6 @@ To open the window which allows to create a clone and manage it, in Unity Editor
 # Future Plans:
 - I'm currently using a terminal command to create the folder links instead of kernel32, and that would be much wiser. So that'll be implemented in future passes of this.
 - Mac and linux suport would be swell.
+
+# Known Issues:
+- When using scriptable objects in one Editor instance, the user will need to trigger a save (either scene or project saves seem to work) in order for the clone to notice that change. Otherwise the scriptable object's values seem to be cached. Save often while you work with SOs!
