@@ -12,6 +12,9 @@ There's a couple ways you can add this to a unity project:
 ```"com.hwaet.projectcloner":  "file:../../../../[relative path from your manifest file to the package.json]"```
 3. If you've got git installed on your machine, (and unity is > 2018.3.0b7) add a line in your package manifest that points straight here!
 ```"com.hwaet.projectcloner": "https://github.com/hwaet/UnityProjectCloner.git"```
+4. In recent unity versions, you can add the above git link directly in the editor without manually editing your manifest:
+![image](https://user-images.githubusercontent.com/30280876/132378040-9d985e3b-634b-46ee-a0c5-5fd52cf37f0b.png)
+
 
 # Where?
 The new cloned project will be placed right next to the original. So your folder structure will look like:
