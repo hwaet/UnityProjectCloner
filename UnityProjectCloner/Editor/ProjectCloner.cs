@@ -476,7 +476,7 @@ namespace UnityProjectCloner
         private static void StartHiddenConsoleProcess(string fileName, string args)
         {
             var process = new System.Diagnostics.Process();
-            process.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
+            //process.StartInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
             process.StartInfo.FileName = fileName;
             process.StartInfo.Arguments = args;
 
