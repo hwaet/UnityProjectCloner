@@ -1,3 +1,6 @@
+# Recent news! 11/2022
+The 2022 unite presentation has shown progress on unity's multiplayer abilities, including a built-in process that seems to mimic this approach but in an even better way! That would be rad. Upon its release, this repository may become redundant. 
+
 ![cloner](https://user-images.githubusercontent.com/30280876/48310703-37780100-e561-11e8-8319-0ecbaeb8c8e4.gif)
 # UnityProjectCloner
 A tool to let the user quickly duplicate their unity project *without copying all the assets*, for multiplayer testing
