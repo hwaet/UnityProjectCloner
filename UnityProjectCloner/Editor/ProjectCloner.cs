@@ -207,12 +207,13 @@ namespace UnityProjectCloner
         /// <param name="destinationPath"></param>
         private static void CreateLinkMac(string sourcePath, string destinationPath)
         {
-            Debug.LogWarning("This hasn't been tested yet! I am mac-less :( Please chime in on the github if it works for you.");
+            // Debug.LogWarning("This hasn't been tested yet! I am mac-less :( Please chime in on the github if it works for you.");
 
-            string cmd = "ln " + string.Format("\"{0}\" \"{1}\"", destinationPath, sourcePath);
+            string cmd = "-s " + string.Format("\"{0}\" \"{1}\"", sourcePath, destinationPath);
             Debug.Log("Mac hard link " + cmd);
 
-            ProjectCloner.StartHiddenConsoleProcess("/bin/bash", cmd);
+            // ProjectCloner.StartHiddenConsoleProcess("/bin/zsh", cmd);
+            StartProcessWithShell("ln", cmd);
         }
 
         /// <summary>
@@ -481,6 +482,24 @@ namespace UnityProjectCloner
             process.StartInfo.Arguments = args;
 
             process.Start();
+        }
+
+        /// <summary>
+        /// starts process with the system shell
+        /// </summary>
+        /// <param name="cmdAndArgs"></param>
+        /// <returns></returns>
+        private static void StartProcessWithShell(string cmdName, string Args)
+        {
+            var process = new System.Diagnostics.Process();
+            process.StartInfo.UseShellExecute = true;
+            process.StartInfo.FileName = cmdName;
+            // process.StartInfo.RedirectStandardError = true;
+            process.StartInfo.Arguments = Args;
+
+            process.Start();
+            process.WaitForExit(-1);
+            Debug.Log($"cmd process exiting with code :{process.ExitCode}");
         }
         #endregion
     }
